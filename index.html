@@ -91,7 +91,6 @@
   .msg-role {
     font-family: var(--mono);
     font-size: 11px;
-    text-transform: lowercase;
     color: var(--text-dim);
     margin-bottom: 6px;
     display: flex;
@@ -313,7 +312,8 @@ async function connect() {
       setStatus('err', 'bağlantı kurulamadı');
       return;
     }
-    activeModel = models[0];
+    const PREFERRED_MODEL = 'ravox:latest';
+    activeModel = models.includes(PREFERRED_MODEL) ? PREFERRED_MODEL : models[0];
     connected = true;
     setStatus('ok', 'bağlantı kuruldu');
   } catch (err) {
