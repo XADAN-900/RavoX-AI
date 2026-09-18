@@ -100,8 +100,18 @@
   }
   .msg-body { font-size: 14.5px; line-height: 1.65; white-space: pre-wrap; word-wrap: break-word; }
   .msg-body code { font-family: var(--mono); background: var(--panel-2); padding: 1px 5px; border-radius: 2px; font-size: 0.9em; }
-  .msg-body pre { background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; overflow-x: auto; }
+  .msg-body pre { background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 34px 14px 12px; overflow-x: auto; margin: 0; }
   .msg-body pre code { background: none; padding: 0; }
+  .code-block { position: relative; margin: 10px 0; }
+  .copy-btn {
+    position: absolute; top: 8px; left: 8px; z-index: 1;
+    background: var(--panel); border: 1px solid var(--line); color: var(--text-dim);
+    border-radius: var(--radius); width: 26px; height: 26px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+  .copy-btn:hover { border-color: var(--amber-dim); color: var(--text); }
+  .copy-btn svg { width: 13px; height: 13px; display: block; }
   .msg-image { max-width: 260px; border-radius: var(--radius); border: 1px solid var(--line); margin-bottom: 8px; display: block; }
   .msg-file-chip {
     display: inline-flex;
@@ -251,7 +261,8 @@ const attachBtn = $('attachBtn');
 const fileInput = $('fileInput');
 const attachPreview = $('attachPreview');
 
-let history = [];
+const SYSTEM_MSG = { role: 'system', content: 'Sen RavoX AI adında yardımcı bir yapay zeka asistanısın. Türkçe cevap ver; kısa kesik cümleler yerine anlamlı, akıcı ve düzgün kurulmuş cümleler kullan, düşünceni net biçimde ifade et.' };
+let history = [SYSTEM_MSG];
 let connected = false;
 let activeModel = '';
 let generating = false;
@@ -293,12 +304,33 @@ function renderBody(text) {
   let html = '';
   parts.forEach((part, i) => {
     if (i % 2 === 1) {
-      html += '<pre><code>' + escapeHtml(part.replace(/^\w*\n/, '')) + '</code></pre>';
+      const codeText = part.replace(/^\w*\n/, '');
+      html += '<div class="code-block"><button class="copy-btn" onclick="copyCode(this)" title="Kopyala">' + ICON_COPY + '</button><pre><code>' + escapeHtml(codeText) + '</code></pre></div>';
     } else {
-      html += escapeHtml(part).replace(/`([^`]+)`/g, '<code>$1</code>');
+      html += escapeHtml(part)
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     }
   });
   return html;
+}
+
+function copyCode(btn) {
+  const codeEl = btn.parentElement.querySelector('code');
+  if (!codeEl) return;
+  navigator.clipboard.writeText(codeEl.textContent).then(() => {
+    const original = btn.innerHTML;
+    btn.innerHTML = ICON_CHECK;
+    setTimeout(() => { btn.innerHTML = original; }, 1200);
+  }).catch(() => {});
+}
+
+function isNearBottom() {
+  return main.scrollHeight - main.scrollTop - main.clientHeight < 80;
+}
+
+function autoScroll() {
+  if (isNearBottom()) main.scrollTop = main.scrollHeight;
 }
 
 function fmtDuration(ms) {
@@ -367,6 +399,8 @@ let msgCounter = 0;
 
 const ICON_FILE = '<svg class="file-chip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>';
 const ICON_CLOSE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+const ICON_COPY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+const ICON_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
 
 async function send() {
   if (generating) {
@@ -418,7 +452,7 @@ async function send() {
   const startTime = Date.now();
   let timerInterval = setInterval(() => {
     timerEl.textContent = fmtDuration(Date.now() - startTime);
-  }, 100);
+  }, 40);
 
   abortCtrl = new AbortController();
   setSendMode(true);
@@ -427,7 +461,7 @@ async function send() {
     const res = await fetch(SERVER + '/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: activeModel, messages: history, stream: true }),
+      body: JSON.stringify({ model: activeModel, messages: history, stream: true, options: { num_predict: -1 } }),
       signal: abortCtrl.signal
     });
     if (!res.ok || !res.body) throw new Error('HTTP ' + res.status);
@@ -452,7 +486,7 @@ async function send() {
             if (firstToken) { firstToken = false; }
             full += obj.message.content;
             bodyEl.innerHTML = renderBody(full);
-            main.scrollTop = main.scrollHeight;
+            autoScroll();
           }
           if (obj.done) stats = obj;
         } catch (e) { /* skip malformed line */ }
@@ -495,7 +529,7 @@ promptInput.addEventListener('input', () => {
   promptInput.style.height = Math.min(promptInput.scrollHeight, 200) + 'px';
 });
 clearBtn.addEventListener('click', () => {
-  history = [];
+  history = [SYSTEM_MSG];
   thread.innerHTML = '';
   emptyState.style.display = '';
 });
