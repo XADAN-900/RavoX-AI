@@ -199,29 +199,6 @@
   ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
 
-  .toast {
-    position: fixed;
-    top: 18px;
-    left: 50%;
-    transform: translateX(-50%) translateY(-12px);
-    background: var(--panel);
-    border: 1px solid var(--green);
-    color: var(--text);
-    font-family: var(--mono);
-    font-size: 12.5px;
-    padding: 9px 16px;
-    border-radius: var(--radius);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s ease, transform 0.25s ease;
-    z-index: 50;
-  }
-  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-  .toast svg { flex-shrink: 0; }
-
   .icon { width: 15px; height: 15px; display: block; }
   #attachBtn { display: flex; align-items: center; justify-content: center; }
   .file-chip-icon { width: 13px; height: 13px; vertical-align: -2px; margin-right: 4px; }
@@ -230,11 +207,6 @@
 </style>
 </head>
 <body>
-
-<div class="toast" id="toast">
-  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-  <span id="toastText">Bağlantı kuruldu</span>
-</div>
 
 <header>
   <div class="brand">RavoX<span> AI</span></div>
@@ -278,16 +250,6 @@ const main = $('main');
 const attachBtn = $('attachBtn');
 const fileInput = $('fileInput');
 const attachPreview = $('attachPreview');
-const toast = $('toast');
-const toastText = $('toastText');
-
-function showToast(text, isError) {
-  toastText.textContent = text;
-  toast.style.borderColor = isError ? 'var(--red)' : 'var(--green)';
-  toast.classList.add('show');
-  clearTimeout(showToast._t);
-  showToast._t = setTimeout(() => toast.classList.remove('show'), 2500);
-}
 
 let history = [];
 let connected = false;
@@ -315,12 +277,11 @@ async function connect() {
     }
     activeModel = models[0];
     connected = true;
-    setStatus('ok', activeModel);
-    showToast('Bağlantı kuruldu');
+    setStatus('ok', 'Bağlantı kuruldu');
+    setTimeout(() => { if (connected) setStatus('ok', activeModel); }, 1800);
   } catch (err) {
     connected = false;
     setStatus('err', 'bağlantı yok');
-    showToast('Bağlantı kurulamadı', true);
   }
 }
 
