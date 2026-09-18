@@ -236,7 +236,7 @@
 <div class="composer">
   <div class="attach-preview" id="attachPreview"></div>
   <div class="composer-inner">
-    <input type="file" id="fileInput" accept="image/*,.txt,.md,.js,.py,.json,.csv,.log,.html,.css" style="display:none">
+    <input type="file" id="fileInput" accept=".txt,.md,.js,.py,.json,.csv,.log,.html,.css" style="display:none">
     <button id="attachBtn" title="Dosya/görsel ekle">
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
     </button>
@@ -374,13 +374,9 @@ fileInput.addEventListener('change', async () => {
   const file = fileInput.files[0];
   if (!file) return;
   if (file.type.startsWith('image/')) {
-    const dataUrl = await new Promise(res => {
-      const r = new FileReader();
-      r.onload = () => res(r.result);
-      r.readAsDataURL(file);
-    });
-    pendingAttachment = { kind: 'image', name: file.name, data: dataUrl.split(',')[1], dataUrl };
-    attachPreview.innerHTML = '<div class="attach-chip"><img src="' + dataUrl + '">' + escapeHtml(file.name) + '<button id="removeAttach">' + ICON_CLOSE + '</button></div>';
+    setStatus('err', 'bu model görsel desteklemiyor');
+    fileInput.value = '';
+    return;
   } else {
     const text = await file.text();
     pendingAttachment = { kind: 'text', name: file.name, data: text };
