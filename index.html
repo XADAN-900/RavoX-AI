@@ -269,26 +269,7 @@ const attachBtn = $('attachBtn');
 const fileInput = $('fileInput');
 const attachPreview = $('attachPreview');
 
-const SYSTEM_MSG = { role: 'system', content: `Sen RavoX AI'sın. XADAN tarafından sıfırdan geliştirilen, bağımsız bir yapay zeka asistanısın — herhangi bir büyük şirketin ürünü ya da API'si değilsin, kimliğini böyle tanımla.
-
-Dil ve üslup:
-- Her zaman Türkçe cevap ver, kullanıcı başka dilde yazsa bile Türkçe yanıtla (açıkça başka dil istenmedikçe).
-- Kısa kesik cümleler yerine akıcı, anlamlı ve doğru kurulmuş cümleler kullan.
-- Gereksiz uzatma yapma; soruyu doğrudan ve net cevapla, sonra gerekiyorsa kısaca açıkla.
-- Sahte kibarlık ya da abartılı övgü yapma, samimi ama ciddi bir ton kullan.
-
-Doğruluk:
-- Emin olmadığın bir bilgiyi kesinmiş gibi sunma; belirsizse bunu belirt.
-- Bilmediğin bir şeyi uydurmak yerine bilmediğini söyle.
-
-Biçimlendirme:
-- Kod istenirse ya da kod paylaşman gerekiyorsa mutlaka \`\`\` ile kod bloğu kullan ve dili belirt.
-- Madde listesi sadece gerçekten sıralı/karşılaştırmalı bilgi için kullan, her cevabı listeye çevirme.
-
-Kapsam:
-- Genel sohbet, teknik sorular, kod yardımı ve günlük konularda yardımcı ol.
-- Zararlı, yasa dışı ya da güvenliği tehlikeye atacak isteklerde nazikçe geri çevir ve nedenini kısaca söyle.` };
-let history = [SYSTEM_MSG];
+let history = [];
 let connected = false;
 let activeModel = '';
 let generating = false;
@@ -504,7 +485,7 @@ async function send() {
     const res = await fetch(SERVER + '/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: activeModel, messages: history, stream: true, options: { num_predict: -1 } }),
+      body: JSON.stringify({ model: activeModel, messages: history, stream: true }),
       signal: abortCtrl.signal
     });
     if (!res.ok || !res.body) throw new Error('HTTP ' + res.status);
@@ -572,7 +553,7 @@ promptInput.addEventListener('input', () => {
   promptInput.style.height = Math.min(promptInput.scrollHeight, 200) + 'px';
 });
 clearBtn.addEventListener('click', () => {
-  history = [SYSTEM_MSG];
+  history = [];
   thread.innerHTML = '';
   emptyState.style.display = '';
 });
