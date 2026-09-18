@@ -39,8 +39,15 @@
     padding: 14px 22px;
     display: flex;
     align-items: center;
-    gap: 18px;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
     flex-wrap: wrap;
+    min-width: 0;
   }
   .brand {
     font-family: var(--mono);
@@ -72,7 +79,7 @@
     padding: 7px 12px;
     border-radius: var(--radius);
     cursor: pointer;
-    margin-left: auto;
+    flex-shrink: 0;
   }
   button.ghost:hover { border-color: var(--amber-dim); color: var(--text); }
 
@@ -219,9 +226,11 @@
 <body>
 
 <header>
-  <div class="brand">RavoX<span> AI</span></div>
-  <div class="status-dot connecting" id="statusDot"></div>
-  <div class="status-text" id="statusText">bağlantı kuruluyor</div>
+  <div class="header-left">
+    <div class="brand">RavoX<span> AI</span></div>
+    <div class="status-dot connecting" id="statusDot"></div>
+    <div class="status-text" id="statusText">bağlantı kuruluyor</div>
+  </div>
   <button class="ghost" id="clearBtn">temizle</button>
 </header>
 
@@ -261,7 +270,25 @@ const attachBtn = $('attachBtn');
 const fileInput = $('fileInput');
 const attachPreview = $('attachPreview');
 
-const SYSTEM_MSG = { role: 'system', content: 'Sen RavoX AI adında yardımcı bir yapay zeka asistanısın. Türkçe cevap ver; kısa kesik cümleler yerine anlamlı, akıcı ve düzgün kurulmuş cümleler kullan, düşünceni net biçimde ifade et.' };
+const SYSTEM_MSG = { role: 'system', content: `Sen RavoX AI'sın. XADAN tarafından sıfırdan geliştirilen, bağımsız bir yapay zeka asistanısın — herhangi bir büyük şirketin ürünü ya da API'si değilsin, kimliğini böyle tanımla.
+
+Dil ve üslup:
+- Her zaman Türkçe cevap ver, kullanıcı başka dilde yazsa bile Türkçe yanıtla (açıkça başka dil istenmedikçe).
+- Kısa kesik cümleler yerine akıcı, anlamlı ve doğru kurulmuş cümleler kullan.
+- Gereksiz uzatma yapma; soruyu doğrudan ve net cevapla, sonra gerekiyorsa kısaca açıkla.
+- Sahte kibarlık ya da abartılı övgü yapma, samimi ama ciddi bir ton kullan.
+
+Doğruluk:
+- Emin olmadığın bir bilgiyi kesinmiş gibi sunma; belirsizse bunu belirt.
+- Bilmediğin bir şeyi uydurmak yerine bilmediğini söyle.
+
+Biçimlendirme:
+- Kod istenirse ya da kod paylaşman gerekiyorsa mutlaka \`\`\` ile kod bloğu kullan ve dili belirt.
+- Madde listesi sadece gerçekten sıralı/karşılaştırmalı bilgi için kullan, her cevabı listeye çevirme.
+
+Kapsam:
+- Genel sohbet, teknik sorular, kod yardımı ve günlük konularda yardımcı ol.
+- Zararlı, yasa dışı ya da güvenliği tehlikeye atacak isteklerde nazikçe geri çevir ve nedenini kısaca söyle.` };
 let history = [SYSTEM_MSG];
 let connected = false;
 let activeModel = '';
@@ -366,7 +393,7 @@ function addMessage(role, text, opts) {
   if (opts.imageDataUrl) extra += '<img class="msg-image" src="' + opts.imageDataUrl + '">';
   if (opts.fileName) extra += '<div class="msg-file-chip">' + ICON_FILE + escapeHtml(opts.fileName) + '</div><br>';
   div.innerHTML =
-    '<div class="msg-role">' + (role === 'user' ? 'sen' : 'model') +
+    '<div class="msg-role">' + (role === 'user' ? 'sen' : 'RavoX AI') +
     '<span class="msg-timer" id="timer-' + opts.id + '"></span></div>' +
     '<div class="msg-extra">' + extra + '</div>' +
     '<div class="msg-body" id="body-' + opts.id + '">' + (extra ? '' : renderBody(text)) + '</div>';
